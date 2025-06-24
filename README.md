@@ -48,7 +48,7 @@ The app takes in customer details and returns:
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/yourusername/customer-churn-ann.git
+   git clone https://github.com/yourusername/ANN_Classification
    cd customer-churn-ann
    ```
 
