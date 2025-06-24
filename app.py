@@ -5,12 +5,10 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder, OneHotEncoder
 import pandas as pd
 import pickle
 
-# ------------------------ Load Trained Models and Scalers ------------------------
+# ------------------------ Load Trained Model and Encoders ------------------------
 
-# Load the trained Keras ANN model
 model = tf.keras.models.load_model('model.h5')
 
-# Load the encoders and scaler
 with open('label_encoder_gender.pkl', 'rb') as file:
     label_encoder_gender = pickle.load(file)
 
@@ -20,53 +18,61 @@ with open('onehot_encoder_geo.pkl', 'rb') as file:
 with open('scaler.pkl', 'rb') as file:
     scaler = pickle.load(file)
 
-# ------------------------ Streamlit App Interface ------------------------
+# ------------------------ Streamlit Setup ------------------------
 
-# App title and basic description
-st.set_page_config(page_title="Churn Predictor", layout="centered")
-st.title('💼 Customer Churn Prediction')
+st.set_page_config(page_title="Customer Churn Predictor", layout="centered")
+st.title('💼 Customer Churn Prediction Using ANN')
 st.write("""
-This application predicts whether a customer is likely to leave the bank or stay, 
-based on inputs like Credit Score, Geography, Age, Balance, and more.
+This application uses an **Artificial Neural Network (ANN)** to predict whether a bank customer 
+is likely to **churn** (i.e., leave the bank). It is trained on real customer data 
+with features like Age, Geography, Salary, Credit Score, etc.
+
+To get started, enter the customer's information in the fields below.
 """)
 
-# Sidebar explanation for context
+# Sidebar with context
 st.sidebar.title("ℹ️ About This Project")
 st.sidebar.markdown("""
-This is an Artificial Neural Network (ANN)-based model trained on customer data to 
-predict churn (whether a customer will leave the bank).
+**🔍 What is Churn?**
+> Churn is when a customer decides to leave a service or company — in this case, a bank.
 
-The model uses features such as:
-- Geography
-- Gender
-- Age
-- Balance
-- Credit Score
-- Salary
-- Products used
-- Activity & Card status
+**🧠 Model Used**
+> This is an Artificial Neural Network built using TensorFlow/Keras.
 
-**Note:** This is a demo app and predictions should not be used for real financial decisions.
+**📊 Inputs Explained:**
+- `Geography`: Country of the customer (used for behavior pattern)
+- `Gender`: Male or Female
+- `Age`: Customer's age
+- `Balance`: Amount in the customer's account
+- `Credit Score`: A score representing creditworthiness
+- `Estimated Salary`: Customer’s annual salary
+- `Tenure`: How many years the customer has been with the bank
+- `Number of Products`: Number of bank products used (loans, savings, credit card, etc.)
+- `Has Credit Card`: Whether the customer has a credit card (`1`: Yes, `0`: No)
+- `Is Active Member`: Is the customer actively using bank services?
+
+**📌 How to Use:**
+Fill in the fields below to get a churn prediction. The app will return the probability 
+of churn and a decision (Likely to churn or not).
 """)
 
-# ------------------------ User Input Section ------------------------
+# ------------------------ Input Fields ------------------------
 
-st.header("📋 Enter Customer Details")
+st.header("📋 Enter Customer Information")
 
-geography = st.selectbox('Geography', onehot_encoder_geo.categories_[0])
-gender = st.selectbox('Gender', label_encoder_gender.classes_)
-age = st.slider('Age', 18, 92)
-balance = st.number_input('Balance')
-credit_score = st.number_input('Credit Score')
-estimated_salary = st.number_input('Estimated Salary')
-tenure = st.slider('Tenure (Years with Bank)', 0, 10)
-num_of_products = st.slider('Number of Products', 1, 4)
-has_cr_card = st.selectbox('Has Credit Card?', [0, 1])
-is_active_member = st.selectbox('Is Active Member?', [0, 1])
+geography = st.selectbox('🌍 Geography', onehot_encoder_geo.categories_[0])
+gender = st.selectbox('🧑 Gender', label_encoder_gender.classes_)
+age = st.slider('🎂 Age (years)', 18, 92)
+credit_score = st.number_input('💳 Credit Score (300-850 recommended)', min_value=300, max_value=850, value=650)
+balance = st.number_input('💰 Current Balance in Account')
+estimated_salary = st.number_input('📈 Estimated Annual Salary')
+tenure = st.slider('📆 Tenure (Years with Bank)', 0, 10)
+num_of_products = st.slider('📦 Number of Products Used', 1, 4)
+has_cr_card = st.selectbox('💳 Has Credit Card?', [0, 1])
+is_active_member = st.selectbox('📍 Is Active Member?', [0, 1])
 
-# ------------------------ Data Preparation ------------------------
+# ------------------------ Data Preprocessing ------------------------
 
-# Construct DataFrame for model input
 input_data = pd.DataFrame({
     'CreditScore': [credit_score],
     'Gender': [label_encoder_gender.transform([gender])[0]],
@@ -79,24 +85,20 @@ input_data = pd.DataFrame({
     'EstimatedSalary': [estimated_salary]
 })
 
-# One-hot encode 'Geography'
 geo_encoded = onehot_encoder_geo.transform([[geography]]).toarray()
 geo_encoded_df = pd.DataFrame(geo_encoded, columns=onehot_encoder_geo.get_feature_names_out(['Geography']))
 
-# Combine all features
 input_data = pd.concat([input_data.reset_index(drop=True), geo_encoded_df], axis=1)
-
-# Scale the features (standardization)
 input_data_scaled = scaler.transform(input_data)
 
-# ------------------------ Make Prediction ------------------------
+# ------------------------ Prediction ------------------------
 
 prediction = model.predict(input_data_scaled)
 prediction_proba = prediction[0][0]
 
-# ------------------------ Show Output ------------------------
+# ------------------------ Output ------------------------
 
-st.header("🔍 Prediction Result")
+st.header("📊 Prediction Result")
 
 st.write(f"**Churn Probability:** `{prediction_proba:.2f}`")
 
