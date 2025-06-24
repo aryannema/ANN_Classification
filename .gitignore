@@ -2,4 +2,3 @@ venv/
 logs/
 regressionlogs/
 salaryregression.ipynb
-regression_model.h5
