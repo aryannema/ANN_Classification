@@ -49,7 +49,7 @@ The app takes in customer details and returns:
 
    ```bash
    git clone https://github.com/yourusername/ANN_Classification
-   cd customer-churn-ann
+   cd ANN_Classification
    ```
 
 2. **Install dependencies**
